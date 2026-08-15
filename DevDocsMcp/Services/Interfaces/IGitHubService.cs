@@ -1,4 +1,4 @@
-﻿namespace DevDocsMcp.Services.Interfacea
+﻿namespace DevDocsMcp.Services.Interfaces
 {
     public interface IGitHubService
     {
