@@ -6,7 +6,7 @@ namespace DevDocsMcp.DTOs
     {
         public string Path { get; set; } = string.Empty;
 
-        [JsonPropertyName("repository")]
-        public GitHubRepository Repository { get; set; } = new();
+        [JsonPropertyName("text_matches")]
+        public List<GitHubTextMatch> TextMatches { get; set; } = new();
     }
 }

@@ -1,10 +1,11 @@
+using DevDocsMcp.Configuration;
 using DevDocsMcp.Services.Implementations;
 using DevDocsMcp.Services.Interfaces;
 using System.Net.Http.Headers;
 
-var builder = WebApplication.CreateBuilder(args);
-
 DotNetEnv.Env.Load();
+
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.
     AddMcpServer(options =>
@@ -19,6 +20,10 @@ builder.Services.
     .WithHttpTransport()
     .WithToolsFromAssembly();
 
+builder.Services.Configure<LocalNotesOptions>(builder.Configuration.GetSection("LocalNotes"));
+
+builder.Services.AddSingleton<ILocalNotesService, LocalNotesService>();
+
 var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? throw new InvalidOperationException("GITHUB_TOKEN environment variable is not configured.");
 
 builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
@@ -28,6 +33,7 @@ builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
     client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
     client.DefaultRequestHeaders.Authorization =  new AuthenticationHeaderValue("Bearer", githubToken);
+    client.Timeout = TimeSpan.FromSeconds(30);
 }); 
 
 

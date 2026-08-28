@@ -4,5 +4,6 @@
     {
         public string Content { get; set; } = string.Empty;
         public string Encoding { get; set; } = string.Empty;
+        public long Size { get; set; }
     }
 }
