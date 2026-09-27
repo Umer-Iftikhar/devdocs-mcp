@@ -1,4 +1,5 @@
 using DevDocsMcp.Configuration;
+using DevDocsMcp.Middlewares;
 using DevDocsMcp.Services.Implementations;
 using DevDocsMcp.Services.Interfaces;
 using System.Net.Http.Headers;
@@ -38,6 +39,8 @@ builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
 
 
 var app = builder.Build();
+
+app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapMcp("/mcp");
 
