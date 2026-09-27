@@ -1,6 +1,9 @@
 using DevDocsMcp.Configuration;
 using DevDocsMcp.Services.Implementations;
 using DevDocsMcp.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using ModelContextProtocol.AspNetCore.Authentication;
 using System.Net.Http.Headers;
 
 DotNetEnv.Env.Load();
@@ -34,12 +37,43 @@ builder.Services.AddHttpClient<IGitHubService, GitHubService>(client =>
     client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
     client.DefaultRequestHeaders.Authorization =  new AuthenticationHeaderValue("Bearer", githubToken);
     client.Timeout = TimeSpan.FromSeconds(30);
-}); 
+});
 
+var authorizationServerUrl = builder.Configuration["Auth:AuthorizationServerUrl"]!;
+var serverUrl = builder.Configuration["Auth:ServerUrl"]!;
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultChallengeScheme = McpAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.Authority = authorizationServerUrl;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidIssuer = authorizationServerUrl,
+        ValidAudiences = new[] { serverUrl.TrimEnd('/'), serverUrl }
+    };
+    options.RequireHttpsMetadata = false;
+})
+.AddMcp(options =>
+{
+    options.ResourceMetadata = new()
+    {
+        Resource = serverUrl,
+        AuthorizationServers = { authorizationServerUrl },
+        ScopesSupported = ["mcp:tools"]
+    };
+});
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-app.MapMcp("/mcp");
+app.UseAuthentication();
+app.UseAuthorization();
 
+app.MapMcp("/mcp").RequireAuthorization();
 
 await app.RunAsync();
